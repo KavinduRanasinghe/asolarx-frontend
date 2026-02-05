@@ -3,7 +3,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import axios from "axios";
 import "./App.css";
 
-const API_BASE_URL = "http://127.0.0.1:5000";
+// const API_BASE_URL = "http://127.0.0.1:5000";
+const API_BASE_URL = "https://kavindu2001-asolarx-backend.hf.space";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("solar_token"));
