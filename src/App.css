@@ -248,8 +248,8 @@ header {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -312,13 +312,17 @@ footer {
   100% { opacity: 1; }
 }
 
-/* --- Login Screen --- */
+/* Change this: */
 .login-container {
-  height: 100vh;
   display: flex;
   align-items: center;
-  justify_content: center;
-  background-color: var(--bg-dark);
+  justify-content: center; /* Fixed hyphen */
+}
+
+.loading-screen, .error-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Fixed hyphen */
 }
 
 .login-card {
@@ -400,4 +404,52 @@ footer {
 .error-screen {
   color: var(--accent-red);
   font-weight: 600;
+}
+
+.training-card {
+  background: rgba(30, 41, 59, 0.7);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  margin-top: 1rem;
+  border: 1px solid #334155;
+}
+
+.model-info {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+  font-family: monospace;
+}
+
+.train-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.train-btn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.train-btn:disabled {
+  background: #475569;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.train-btn.loading {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
