@@ -3,8 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import axios from "axios";
 import "./App.css";
 
-// const API_BASE_URL = "http://127.0.0.1:5000";
-const API_BASE_URL = "https://kavindu2001-asolarx-backend.hf.space";
+const API_BASE_URL = "http://127.0.0.1:5000";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("solar_token"));
@@ -16,9 +15,11 @@ function App() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   
-  // New State for Training
+  // --- NEW STATE FOR MODEL ACCURACY & TRAINING ---
   const [isTraining, setIsTraining] = useState(false);
-
+const [modelAccuracy, setModelAccuracy] = useState(
+  localStorage.getItem("solar_accuracy") || "N/A"
+);
   useEffect(() => {
     const timer = setInterval(() => setCurrentDate(new Date()), 1000);
     return () => clearInterval(timer);
@@ -65,16 +66,14 @@ function App() {
         setSystemData({
           ...statusRes.data,
           metrics: {
-            // Priority 1: AI Engine calculated metrics
-            // Priority 2: History data fallback
             Battery_V: statusRes.data.metrics?.Battery_V ?? latest.Battery_V,
             Solar_V: statusRes.data.metrics?.Solar_V ?? latest.Solar_V,
             Weather_Temp_C: statusRes.data.metrics?.Weather_Temp_C ?? latest.Weather_Temp_C,
             Weather_Humidity: statusRes.data.metrics?.Weather_Humidity ?? latest.Weather_Humidity,
             Weather_Clouds: statusRes.data.metrics?.Weather_Clouds ?? latest.Weather_Clouds,
           },
-          // Capture the model filename from the backend home route or status response
-          model_version: statusRes.data.model_version || "Latest"
+          // Model version from backend
+          model_version: statusRes.data.model_version || "asolarx_latest.pkl"
         });
       }
       setError(null);
@@ -87,23 +86,35 @@ function App() {
     }
   }, [handleLogout]);
 
-  // NEW: Handle Model Training Trigger
-  const handleTrainModel = async () => {
-    const activeToken = localStorage.getItem("solar_token");
-    if (!activeToken) return;
+ const handleTrainModel = async () => {
+  const activeToken = localStorage.getItem("solar_token");
+  if (!activeToken) return;
+  
+  setIsTraining(true);
+  try {
+    const config = { headers: { Authorization: `Bearer ${activeToken}` } };
     
-    setIsTraining(true);
-    try {
-      const config = { headers: { Authorization: `Bearer ${activeToken}` } };
-      const response = await axios.post(`${API_BASE_URL}/api/train`, {}, config);
-      alert(`Success: ${response.data.msg}\nActive Model: ${response.data.model_file}`);
-      fetchData(); // Refresh to load new model
-    } catch (err) {
-      alert("Training Failed: " + (err.response?.data?.error || "Unknown Error"));
-    } finally {
-      setIsTraining(false);
-    }
-  };
+    // The 'response' object contains 'data', which is your Flask JSON
+    const response = await axios.post(`${API_BASE_URL}/api/train`, {}, config);
+    
+    // Extract accuracy and model_file from the response
+    const { accuracy, model_file, msg } = response.data; 
+
+    // Update your React state
+    setModelAccuracy(accuracy); 
+    
+    // Optional: Persist it so it stays after a page refresh
+    localStorage.setItem("solar_accuracy", accuracy);
+
+    alert(`${msg}\nModel: ${model_file}\nAccuracy: ${accuracy}`);
+    
+    fetchData(); // Refresh the rest of the dashboard
+  } catch (err) {
+    alert("Training Failed: " + (err.response?.data?.error || "Unknown Error"));
+  } finally {
+    setIsTraining(false);
+  }
+};
 
   useEffect(() => {
     if (token) {
@@ -170,10 +181,15 @@ function App() {
               </div>
             </section>
 
-            {/* NEW: Training Control Section */}
+            {/* --- UPDATED MODEL MANAGEMENT WITH ACCURACY DISPLAY --- */}
             <section className="training-card">
               <h3>⚙️ Model Management</h3>
-              <p className="model-info">Active: {systemData.model_version || "asolarx_latest.pkl"}</p>
+              <p className="model-info">Active: {systemData.model_version}</p>
+              
+              <div className="accuracy-badge">
+                Current Model Accuracy: <span>{modelAccuracy}</span>
+              </div>
+
               <button 
                 className={`train-btn ${isTraining ? 'loading' : ''}`} 
                 onClick={handleTrainModel}
@@ -213,7 +229,7 @@ function App() {
           </div>
         </div>
       )}
-      <footer>System ID: ESP32_Proto_01 | Active Model: {systemData?.model_version || 'v1.0'}</footer>
+      <footer>System ID: ESP32_Proto_01 | Version: {systemData?.model_version || 'v1.0'}</footer>
     </div>
   );
 }
